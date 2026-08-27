@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+    --emergency: 0 84.2% 60.2%;
+    --emergency-foreground: 210 40% 98%;
+    --emergency-light: 0 84.2% 90%;
+    --safe: 142 76% 36%;
+    --safe-foreground: 210 40% 98%;
+    --safe-light: 142 76% 90%;
+    --watch-bg: 222.2 84% 4.9%;
+    --watch-border: 217.2 32.6% 17.5%;
+    --watch-text: 210 40% 98%;
+    --watch-accent: 0 84.2% 60.2%;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+    --emergency: 0 84.2% 60.2%;
+    --emergency-foreground: 210 40% 98%;
+    --emergency-light: 0 84.2% 20%;
+    --safe: 142 76% 36%;
+    --safe-foreground: 210 40% 98%;
+    --safe-light: 142 76% 15%;
+    --watch-bg: 222.2 84% 4.9%;
+    --watch-border: 217.2 32.6% 17.5%;
+    --watch-text: 210 40% 98%;
+    --watch-accent: 0 84.2% 60.2%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+.leaflet-container {
+  @apply h-full w-full rounded-lg;
+  font-family: var(--font-sans);
+}
+
+.leaflet-popup-content-wrapper {
+  @apply rounded-lg shadow-lg;
+}
+
+.leaflet-popup-content {
+  @apply m-0 p-2;
+}
+
+.watch-screen {
+  @apply relative h-[320px] w-[320px] max-h-[90vh] max-w-[90vw] rounded-[40px] bg-watch-bg border-4 border-watch-border shadow-2xl overflow-hidden;
+}
+
+@media (max-width: 640px) {
+  .watch-screen {
+    @apply h-[280px] w-[280px] rounded-[30px];
+  }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 0.4; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 1.5s ease-in-out infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out infinite;
+}
+
+@keyframes countdown-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+.animate-countdown {
+  animation: countdown-pulse 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse-ring,
+  .animate-shake,
+  .animate-countdown {
+    animation: none;
+  }
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.focus-visible-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}

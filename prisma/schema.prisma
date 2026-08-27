@@ -1,0 +1,323 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                     String    @id @default(cuid())
+  email                  String    @unique
+  name                   String?
+  image                  String?
+  emailVerified          DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  accounts               Account[]
+  sessions               Session[]
+  devices                WatchDevice[]
+  contacts               EmergencyContact[]
+  sentInvitations        ContactInvitation[] @relation("SentInvitations")
+  alerts                 EmergencyAlert[]
+  alertRecipients        AlertRecipient[]
+  acknowledgements       AlertAcknowledgement[]
+  notificationLogs       NotificationLog[]
+  sentVoiceMessages      VoiceMessage[] @relation("SentVoiceMessages")
+  receivedVoiceMessages  VoiceMessage[] @relation("ReceivedVoiceMessages")
+  settings               UserSettings?
+
+  @@index([email])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model WatchDevice {
+  id              String   @id @default(cuid())
+  userId          String
+  deviceId        String   @unique
+  name            String?
+  model           String?
+  firmwareVersion String?
+  batteryLevel    Int      @default(100)
+  isConnected     Boolean  @default(false)
+  lastSeen        DateTime?
+  isPaired        Boolean  @default(false)
+  pairedAt        DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([deviceId])
+}
+
+model EmergencyContact {
+  id              String   @id @default(cuid())
+  userId          String
+  name            String
+  email           String
+  phone           String?
+  relationship    String?
+  isVerified      Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  verificationToken String? @unique
+  verifiedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invitations ContactInvitation[] @relation("ContactInvitations")
+  alertRecipients AlertRecipient[]
+
+  @@index([userId])
+  @@index([email])
+  @@index([verificationToken])
+}
+
+model ContactInvitation {
+  id          String   @id @default(cuid())
+  inviterId   String
+  contactId   String
+  email       String
+  status      InvitationStatus @default(PENDING)
+  token       String   @unique
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  inviter User @relation("SentInvitations", fields: [inviterId], references: [id], onDelete: Cascade)
+  contact EmergencyContact @relation("ContactInvitations", fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@index([inviterId])
+  @@index([contactId])
+  @@index([token])
+  @@index([email])
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model EmergencyAlert {
+  id              String      @id @default(cuid())
+  userId          String
+  alertToken      String      @unique @default(cuid())
+  accessToken     String      @unique @default(cuid())
+  status          AlertStatus @default(ACTIVE)
+  triggeredAt     DateTime    @default(now())
+  confirmedAt     DateTime?
+  resolvedAt      DateTime?
+  acknowledgedAt  DateTime?
+  cancelledAt     DateTime?
+  locationLat     Float?
+  locationLng     Float?
+  locationAccuracy Float?
+  locationUpdatedAt DateTime?
+  metadata        Json?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipients      AlertRecipient[]
+  acknowledgements AlertAcknowledgement[]
+  locationUpdates LocationUpdate[]
+  notificationLogs NotificationLog[]
+  voiceMessages   VoiceMessage[]
+
+  @@index([userId])
+  @@index([alertToken])
+  @@index([accessToken])
+  @@index([status])
+  @@index([triggeredAt])
+}
+
+enum AlertStatus {
+  PENDING_CONFIRMATION
+  ACTIVE
+  ACKNOWLEDGED
+  RESOLVED
+  CANCELLED
+  EXPIRED
+}
+
+model AlertRecipient {
+  id          String   @id @default(cuid())
+  alertId     String
+  contactId   String
+  userId      String
+  email       String
+  name        String
+  isNotified  Boolean  @default(false)
+  notifiedAt  DateTime?
+  emailSent   Boolean  @default(false)
+  emailSentAt DateTime?
+  emailError  String?
+  accessToken String   @unique @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  alert       EmergencyAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  contact     EmergencyContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  acknowledgements AlertAcknowledgement[]
+  notificationLogs NotificationLog[]
+
+  @@index([alertId])
+  @@index([contactId])
+  @@index([userId])
+  @@index([accessToken])
+}
+
+model AlertAcknowledgement {
+  id        String   @id @default(cuid())
+  alertId   String
+  userId    String
+  recipientId String
+  createdAt DateTime @default(now())
+
+  alert     EmergencyAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipient AlertRecipient @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([alertId, userId])
+  @@index([alertId])
+  @@index([userId])
+  @@index([recipientId])
+}
+
+model LocationUpdate {
+  id        String   @id @default(cuid())
+  alertId   String
+  lat       Float
+  lng       Float
+  accuracy  Float?
+  timestamp DateTime @default(now())
+
+  alert     EmergencyAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  @@index([alertId])
+  @@index([timestamp])
+}
+
+model NotificationLog {
+  id          String   @id @default(cuid())
+  alertId     String
+  userId      String
+  recipientId String?
+  type        NotificationType
+  status      NotificationStatus
+  provider    String?
+  providerId  String?
+  error       String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  alert       EmergencyAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipient   AlertRecipient? @relation(fields: [recipientId], references: [id], onDelete: SetNull)
+
+  @@index([alertId])
+  @@index([userId])
+  @@index([recipientId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+model VoiceMessage {
+  id          String   @id @default(cuid())
+  alertId     String
+  senderId    String
+  recipientId String
+  audioUrl    String
+  duration    Int
+  mimeType    String
+  fileSize    Int
+  transcript  String?
+  isPlayed    Boolean  @default(false)
+  playedAt    DateTime?
+  createdAt   DateTime @default(now())
+
+  alert       EmergencyAlert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  sender      User @relation("SentVoiceMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient   User @relation("ReceivedVoiceMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([alertId])
+  @@index([senderId])
+  @@index([recipientId])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  EMAIL
+  PUSH
+  SMS
+  IN_APP
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  BOUNCED
+}
+
+model UserSettings {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  locationSharing   Boolean  @default(true)
+  emailNotifications Boolean  @default(true)
+  pushNotifications Boolean  @default(true)
+  smsNotifications  Boolean  @default(false)
+  alertSound        Boolean  @default(true)
+  vibration         Boolean  @default(true)
+  autoResolveHours  Int      @default(24)
+  testMode          Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

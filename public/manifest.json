@@ -1,0 +1,41 @@
+{
+  "name": "SafeLink",
+  "short_name": "SafeLink",
+  "description": "Human Safety Platform - Emergency alerts and location sharing",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f1a",
+  "theme_color": "#dc2626",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["medical", "safety", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Watch Interface",
+      "short_name": "Watch",
+      "description": "Open watch interface",
+      "url": "/watch",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Open dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
